@@ -1,6 +1,6 @@
 setuptools
 pip==24.2
-opencv-python==4.10.0
+opencv-python==4.9.0.80
 mediapipe
 streamlit
 numpy
