@@ -36,18 +36,13 @@ blink_counter = 0
 warning_displayed = False
 blink_start_time = None
 
-# Streamlit을 이용하여 프레임을 스트리밍하기 위한 함수
-frame_window = st.image([])
+# Streamlit 카메라 입력
+img_file_buffer = st.camera_input("Take a picture")
 
-# 웹캠 사용을 위한 비디오 캡처 객체 생성
-cap = cv2.VideoCapture(0)
-
-# 실시간 스트리밍 루프
-while cap.isOpened():
-    success, frame = cap.read()
-    if not success:
-        st.write("웹캠을 찾을 수 없습니다.")
-        break
+if img_file_buffer is not None:
+    # 이미지를 OpenCV 형식으로 변환
+    bytes_data = img_file_buffer.getvalue()
+    frame = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
 
     # BGR을 RGB로 변환
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -101,6 +96,4 @@ while cap.isOpened():
                 cv2.putText(frame, 'WARNING!', (frame.shape[1] - 300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
 
     # Streamlit에서 프레임 표시
-    frame_window.image(frame, channels="BGR")
-
-cap.release()
+    st.image(frame, channels="BGR")
