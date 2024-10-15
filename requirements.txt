@@ -1,6 +1,6 @@
-opencv-python-headless==4.5.3.56
-mediapipe
-streamlit
 setuptools
 pip==24.2
+opencv-python-headless==4.5.5.64
+mediapipe
+streamlit
 numpy
