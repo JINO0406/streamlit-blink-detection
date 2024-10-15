@@ -3,10 +3,9 @@ import streamlit as st
 from mediapipe import solutions
 import mediapipe as mp
 import numpy as np
-import time
 
 # Streamlit 페이지 설정
-st.title("T라 분석해 졸음 경고 서비스")
+st.title("Blink Detection with OpenCV and MediaPipe")
 
 # MediaPipe 얼굴 메쉬 모듈 불러오기
 mp_face_mesh = mp.solutions.face_mesh
@@ -29,14 +28,8 @@ def calculate_EAR(eye_landmarks, landmarks, image_shape):
 
 # EAR 임계값 및 연속 프레임 깜박임 기준
 EAR_THRESHOLD = 0.2
-EAR_CONSEC_FRAMES = 15  # 0.5초 동안 감고 있으면 (assuming 30fps)
 
-# 눈 깜박임 카운터 및 플래그
-blink_counter = 0
-warning_displayed = False
-blink_start_time = None
-
-# Streamlit 카메라 입력
+# Streamlit 카메라 입력을 사용하여 이미지 캡처
 img_file_buffer = st.camera_input("Take a picture")
 
 if img_file_buffer is not None:
@@ -64,36 +57,12 @@ if img_file_buffer is not None:
             # 양쪽 눈의 평균 EAR
             ear = (left_EAR + right_EAR) / 2.0
 
-            # EAR 값이 임계값보다 낮으면 눈이 감긴 것으로 간주
-            if ear < EAR_THRESHOLD:
-                if blink_start_time is None:
-                    blink_start_time = time.time()  # 눈을 감기 시작한 시간 기록
-                blink_counter += 1
-            else:
-                blink_start_time = None
-                blink_counter = 0
-                warning_displayed = False  # 눈이 다시 떴으므로 경고 초기화
-
-            # 눈이 0.5초 이상 감겨 있으면 경고 표시
-            if blink_start_time is not None:
-                elapsed_time = time.time() - blink_start_time
-                if elapsed_time > 0.5:
-                    warning_displayed = True
-
-            # 눈 주변 랜드마크만 그리기
-            for eye_landmarks in [left_eye_landmarks, right_eye_landmarks]:
-                for idx in eye_landmarks:
-                    landmark = face_landmarks.landmark[idx]
-                    h, w, _ = frame.shape
-                    x, y = int(landmark.x * w), int(landmark.y * h)
-                    cv2.circle(frame, (x, y), 2, (0, 255, 0), -1)
-
             # EAR 값 화면에 표시
             cv2.putText(frame, f'EAR: {ear:.2f}', (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
 
             # 경고 문구 화면에 표시
-            if warning_displayed:
-                cv2.putText(frame, 'WARNING!', (frame.shape[1] - 300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
+            if ear < EAR_THRESHOLD:
+                cv2.putText(frame, 'WARNING: Eyes closed!', (frame.shape[1] - 300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
 
     # Streamlit에서 프레임 표시
     st.image(frame, channels="BGR")
